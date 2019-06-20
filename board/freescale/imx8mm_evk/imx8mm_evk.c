@@ -653,6 +653,10 @@ struct mipi_dsi_client_dev rm67191_dev = {
 
 #define FSL_SIP_GPC			0xC2000000
 #define FSL_SIP_CONFIG_GPC_PM_DOMAIN	0x3
+#define VPU_BUS				5
+#define VPU_G1				6
+#define VPU_G2				7
+#define VPU_H1				8
 #define DISPMIX				9
 #define MIPI				10
 
@@ -704,6 +708,34 @@ void board_quiesce_devices(void)
 {
 	gpio_request(IMX_GPIO_NR(1, 8), "DSI EN");
 	gpio_direction_output(IMX_GPIO_NR(1, 8), 0);
+}
+
+void do_enable_vpu(bool enable)
+{
+	clock_enable(CCGR_VPUMIX_BUS, false);
+	call_imx_sip(FSL_SIP_GPC, FSL_SIP_CONFIG_GPC_PM_DOMAIN, VPU_BUS, false, 0);
+	clock_enable(CCGR_VPUG1, false);
+	call_imx_sip(FSL_SIP_GPC, FSL_SIP_CONFIG_GPC_PM_DOMAIN, VPU_G1, false, 0);
+	clock_enable(CCGR_VPUG2, false);
+	call_imx_sip(FSL_SIP_GPC, FSL_SIP_CONFIG_GPC_PM_DOMAIN, VPU_G2, false, 0);
+
+    if (enable == 0) {
+		return;
+    }
+
+
+	clock_set_target_val(VPU_BUS_CLK_ROOT, CLK_ROOT_ON | CLK_ROOT_SOURCE_SEL(1));	// SYS_PLL1 (800)
+	clock_set_target_val(VPU_G1_CLK_ROOT, CLK_ROOT_ON | CLK_ROOT_SOURCE_SEL(1));	// VPU_PLL (600)
+	clock_set_target_val(VPU_G2_CLK_ROOT, CLK_ROOT_ON | CLK_ROOT_SOURCE_SEL(1));	// VPU_PLL (600)
+
+	clock_enable(CCGR_VPUMIX_BUS, enable);
+	call_imx_sip(FSL_SIP_GPC, FSL_SIP_CONFIG_GPC_PM_DOMAIN, VPU_BUS, enable, 0);
+
+	clock_enable(CCGR_VPUG1, enable);
+	call_imx_sip(FSL_SIP_GPC, FSL_SIP_CONFIG_GPC_PM_DOMAIN, VPU_G1, enable, 0);
+
+	clock_enable(CCGR_VPUG2, enable);
+	call_imx_sip(FSL_SIP_GPC, FSL_SIP_CONFIG_GPC_PM_DOMAIN, VPU_G2, enable, 0);
 }
 
 struct display_info_t const displays[] = {{
@@ -758,6 +790,7 @@ int board_late_init(void)
 	board_late_mmc_env_init();
 #endif
 
+	do_enable_vpu(true);
 	return 0;
 }
 

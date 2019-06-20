@@ -258,6 +258,7 @@ enum intpll_out_freq {
 	INTPLL_OUT_1200M,
 	INTPLL_OUT_1000M,
 	INTPLL_OUT_2000M,
+	INTPLL_OUT_600M,
 };
 
 #define PLL_1443X_RATE(_rate, _m, _p, _s, _k)			\
@@ -504,6 +505,11 @@ int intpll_configure(enum pll_clocks pll, enum intpll_out_freq freq)
 	};
 
 	switch (freq) {
+	case INTPLL_OUT_600M:
+		/* 24 * 0xfa / 2 / 2 ^ 2 */
+		pll_div_ctl_val = INTPLL_MAIN_DIV_VAL(0x12c) |
+			INTPLL_PRE_DIV_VAL(3) | INTPLL_POST_DIV_VAL(2);
+		break;
 	case INTPLL_OUT_750M:
 		/* 24 * 0xfa / 2 / 2 ^ 2 */
 		pll_div_ctl_val = INTPLL_MAIN_DIV_VAL(0xfa) |
@@ -719,7 +725,14 @@ int clock_init()
 
 	clock_enable(CCGR_SEC_DEBUG, 1);
 
+	/*
+	 * set vpu clock root
+	 * vpu pll 600M
+	 */
+	intpll_configure(ANATOP_VPU_PLL, INTPLL_OUT_600M);
+
 	enable_display_clk(1);
+
 	return 0;
 };
 
