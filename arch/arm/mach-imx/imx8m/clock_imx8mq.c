@@ -688,6 +688,19 @@ int frac_pll_init(u32 pll, enum frac_pll_out_val val)
 			FRAC_PLL_REFCLK_DIV_VAL(4) |
 			FRAC_PLL_OUTPUT_DIV_VAL(0);
 		break;
+	case ANATOP_VPU_PLL:
+		pll_cfg0 = &ana_pll->vpu_pll_cfg0;
+		pll_cfg1 = &ana_pll->vpu_pll_cfg1;
+
+		if (val == FRAC_PLL_OUT_600M)
+			val_cfg1 = FRAC_PLL_INT_DIV_CTL_VAL(59);
+		else
+			return -EINVAL;
+		val_cfg0 = FRAC_PLL_CLKE_MASK | FRAC_PLL_REFCLK_SEL_OSC_25M |
+			FRAC_PLL_LOCK_SEL_MASK | FRAC_PLL_NEWDIV_VAL_MASK |
+			FRAC_PLL_REFCLK_DIV_VAL(4) |
+			FRAC_PLL_OUTPUT_DIV_VAL(1);
+		break;
 	default:
 		return -EINVAL;
 	}
@@ -834,6 +847,8 @@ int clock_init(void)
 	clock_set_target_val(GIC_CLK_ROOT, CLK_ROOT_ON | CLK_ROOT_SOURCE_SEL(1));
 	clock_enable(CCGR_GIC, 1);
 
+	/* set VPU PLL to 600 Mhz */
+	frac_pll_init(ANATOP_VPU_PLL, FRAC_PLL_OUT_600M);
 	return 0;
 }
 #endif

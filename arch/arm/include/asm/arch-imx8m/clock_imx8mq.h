@@ -13,6 +13,7 @@
 
 enum pll_clocks {
 	ANATOP_ARM_PLL,
+	ANATOP_VPU_PLL,
 	ANATOP_GPU_PLL,
 	ANATOP_SYSTEM_PLL1,
 	ANATOP_SYSTEM_PLL2,
@@ -636,6 +637,7 @@ enum enet_freq {
 enum frac_pll_out_val {
 	FRAC_PLL_OUT_1000M,
 	FRAC_PLL_OUT_1600M,
+	FRAC_PLL_OUT_600M,
 };
 
 enum sscg_pll_out_val {

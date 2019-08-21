@@ -360,6 +360,37 @@ int board_mmc_get_env_dev(int devno)
 	return devno;
 }
 
+#define FSL_SIP_GPC			0xC2000000
+#define FSL_SIP_CONFIG_GPC_PM_DOMAIN	0x3
+#define VPU_BUS				5
+
+void do_enable_vpu(bool enable)
+{
+	clock_enable(CCGR_VPU_DEC, false);
+	clock_enable(CCGR_VA53, false);
+	clock_enable(CCGR_VP9, false);
+	call_imx_sip(FSL_SIP_GPC, FSL_SIP_CONFIG_GPC_PM_DOMAIN, VPU_BUS, false, 0);
+
+    if (enable == 0) {
+		return;
+    }
+
+	clock_set_target_val(VPU_BUS_CLK_ROOT, CLK_ROOT_ON | CLK_ROOT_SOURCE_SEL(1));	// SYSTEM_PLL1 (800)
+	clock_set_target_val(VPU_G1_CLK_ROOT, CLK_ROOT_ON | CLK_ROOT_SOURCE_SEL(1));	// VPU_PLL (600)
+	clock_set_target_val(VPU_G2_CLK_ROOT, CLK_ROOT_ON | CLK_ROOT_SOURCE_SEL(1));	// VPU_PLL (600)
+
+	clock_enable(CCGR_VPU_DEC, enable);
+	clock_enable(CCGR_VA53, enable);
+	clock_enable(CCGR_VP9, enable);
+	call_imx_sip(FSL_SIP_GPC, FSL_SIP_CONFIG_GPC_PM_DOMAIN, VPU_BUS, enable, 0);
+
+	writel(0x3, IMX_VPU_BLK_CTL_BASE);	// VPUMIX G1/G2 soft reset control
+	writel(0x3, IMX_VPU_BLK_CTL_BASE + 4);  // VPUMIX G1/G2 block clock enable
+	writel(0xFFFFFFFF, IMX_VPU_BLK_CTL_BASE + 0x8);  // G1 fuse decoder enable
+	writel(0xFFFFFFFF, IMX_VPU_BLK_CTL_BASE + 0xC);  // G1 fuse pp enable
+	writel(0xFFFFFFFF, IMX_VPU_BLK_CTL_BASE + 0x10);  // G2 fuse decoder enable
+}
+
 int board_late_init(void)
 {
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
@@ -371,6 +402,7 @@ int board_late_init(void)
 	board_late_mmc_env_init();
 #endif
 
+	do_enable_vpu(1);
 	return 0;
 }
 
