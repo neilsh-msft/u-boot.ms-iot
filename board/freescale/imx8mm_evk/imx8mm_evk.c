@@ -736,6 +736,11 @@ void do_enable_vpu(bool enable)
 
 	clock_enable(CCGR_VPUG2, enable);
 	call_imx_sip(FSL_SIP_GPC, FSL_SIP_CONFIG_GPC_PM_DOMAIN, VPU_G2, enable, 0);
+
+	writel(0xFFFFFFFF, IMX_VPU_BLK_CTL_BASE + 0x8);  // G1 fuse decoder enable
+	writel(0xFFFFFFFF, IMX_VPU_BLK_CTL_BASE + 0xC);  // G1 fuse pp enable
+
+	writel(0xFFFFFFFF, IMX_VPU_BLK_CTL_BASE + 0x10);  // G2 fuse decoder enable
 }
 
 struct display_info_t const displays[] = {{

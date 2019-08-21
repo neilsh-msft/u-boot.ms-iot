@@ -506,7 +506,7 @@ int intpll_configure(enum pll_clocks pll, enum intpll_out_freq freq)
 
 	switch (freq) {
 	case INTPLL_OUT_600M:
-		/* 24 * 0xfa / 2 / 2 ^ 2 */
+		/* 24 * 0x12c / 3 / 2 ^ 2 */
 		pll_div_ctl_val = INTPLL_MAIN_DIV_VAL(0x12c) |
 			INTPLL_PRE_DIV_VAL(3) | INTPLL_POST_DIV_VAL(2);
 		break;
